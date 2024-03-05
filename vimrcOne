@@ -1,0 +1,98 @@
+" Pure vim IDE, trying to get as close to  an ide as possible, without using any external plugins
+" Features to implement:
+
+" 4) Filetree 
+" 6) Debugging
+" 7) Autosuggest
+
+" Settings
+set number
+set nocp
+set autoread
+set nocompatible
+set ignorecase
+syntax on
+filetype plugin on
+
+" User defined commands for running programs 
+com E edit $MYVIMRC
+"com R !Rscript %
+com L !latex %
+com T Explore
+com V Explore
+com F !gfortran % & gfortran % & ./a.out
+
+
+inoremap ( ()<Esc>i
+inoremap [ []<Esc>i
+inoremap { {}<Esc>i
+
+" Fortran shortcuts
+inoremap ;Fe END PROGRAM
+inoremap ;Fp PROGRAM
+inoremap ;Fd CALL DATE_AND_TIME()
+inoremap ;Fc CHARACTER ::
+inoremap ;Fw write(*,*)
+
+" Autosaves different file formats
+augroup Autosave
+        autocmd TextChanged,TextChangedI *.txt silent write
+        autocmd TextChanged,TextChangedI *.vimrc silent write
+        autocmd TextChanged,TextChangedI *.java silent write
+        autocmd TextChanged,TextChangedI *.py silent write
+        autocmd TextChanged,TextChangedI *.R silent write
+        autocmd TextChanged,TextChangedI *.f90 silent write
+        autocmd TextChanged,TextChangedI *.c silent write
+augroup END
+
+augroup runningCode
+        autocmd FileType rust com R ! rustc % & ./*
+        autocmd FileType c com  R !gcc % & ./a.out
+        autocmd FileType python com  R !python3 %
+        autocmd FileType java com R !reset & javac % & java %
+        autocmd FileType java com Rx !javac -Xlint %
+augroup END
+
+augroup Rustlinting
+        autocmd FileType rust compiler rustc
+        autocmd FileType rust setlocal makeprg=rustc\ %
+        autocmd BufWritePost *.rs silent make! % | silent redraw!
+        autocmd QuickFixCmdPost [^l]* cwindow
+augroup END
+
+" Linting for java, c and fortran
+augroup Javalinting
+        autocmd FileType java compiler javac
+        autocmd FileType java setlocal makeprg=javac\ %
+        autocmd BufWritePost *.java   silent make! % | silent redraw!
+        autocmd QuickFixCmdPost [^l]* cwindow
+augroup END
+
+augroup Pythong_programming
+        autocmd FileType python compiler pylint
+        autocmd FileType python setlocal makeprg=pylint\ %
+        autocmd BufWritePost *.py silent make! % | silent redraw!
+        autocmd QuickFixCmdPost [^l]* cwindow
+augroup END
+
+augroup C_programming
+        "Error messages
+        autocmd FileType c compiler gcc
+        autocmd FileType c setlocal makeprg=gcc\ %
+        autocmd BufWritePost *.c  silent make! % | silent redraw!
+        autocmd QuickFixCmdPost [^l]* cwindow
+
+        " C indention
+        autocmd FileType c,cpp,java :set cindent
+augroup END
+
+augroup Fortran_program
+        "Linting
+        autocmd FileType fortran compiler gfortran
+        autocmd FileType fortran setlocal makeprg=gfortran\ %
+        autocmd BufWritePost *.f90  silent make! % | silent redraw!
+        autocmd QuickFixCmdPost [^l]* cwindow
+
+        " Fortran/python indention      
+        autocmd FileType fortran,python,text :set smartindent
+augroup END       
